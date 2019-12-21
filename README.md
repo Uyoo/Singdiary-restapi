@@ -1,0 +1,1 @@
+# Singdiary-restapi-service
