@@ -6,7 +6,6 @@ import javax.validation.constraints.NotEmpty;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
 @Builder
 @AllArgsConstructor @NoArgsConstructor
 @Getter @Setter

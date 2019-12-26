@@ -2,28 +2,32 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.singdiary.dao.MydiaryRepository">
 
-    <insert id="insertUserMydiarySong" parameterType="MyDiary">
+    <insert id="insertUserMydiarySong" parameterType="Mydiary">
         INSERT INTO mydiary(userId, songTitle, playResource, genre, clickedNum, open, uploadDate, uploadTime)
         VALUES (#{userId}, #{songTitle}, #{playResource}, #{genre}, #{clickedNum}, #{open}, #{uploadDate}, #{uploadTime})
     </insert>
 
-    <select id="findUserMydiaryUploadSong" parameterType="MyDiary" resultType="MyDiary">
+    <select id="findUserMydiaryUploadSong" parameterType="Mydiary" resultType="Mydiary">
         SELECT mydiary.id, account.name as "userName", mydiary.userId, mydiary.songTitle, mydiary.playResource, mydiary.genre, mydiary.clickedNum, mydiary.open, mydiary.uploadDate, mydiary.uploadTime
-        FROM user, mydiary
-        where mydiary.userId = user.id and userId = #{userId} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime};
+        FROM account, mydiary
+        where mydiary.userId = account.id and userId = #{userId} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime};
     </select>
 
-    <select id="findUserMydiaryAll" parameterType="Integer" resultType="MyDiary">
-        SELECT mydiary.id, user.name as "userName", mydiary.userId, mydiary.songTitle, mydiary.playResource, mydiary.genre, mydiary.clickedNum, mydiary.open, mydiary.uploadDate, mydiary.uploadTime
-        FROM user, mydiary
-        where mydiary.userId = user.id and userId = #{userId}
+    <select id="findUserMydiaryAll" parameterType="Integer" resultType="Mydiary">
+        SELECT mydiary.id, account.name as "userName", mydiary.userId, mydiary.songTitle, mydiary.playResource, mydiary.genre, mydiary.clickedNum, mydiary.open, mydiary.uploadDate, mydiary.uploadTime
+        FROM account, mydiary
+        where mydiary.userId = account.id and userId = #{userId}
     </select>
 
-    <select id="findUserMydiarySong" resultType="MyDiary">
-        SELECT mydiary.id, user.name as "userName", mydiary.userId, mydiary.songTitle, mydiary.playResource, mydiary.genre, mydiary.clickedNum, mydiary.open, mydiary.uploadDate, mydiary.uploadTime
-        FROM user, mydiary
-        where mydiary.userId = user.id and mydiary.Id = #{mydiaryId} and mydiary.userId = #{userId};
+    <select id="findUserMydiarySong" resultType="Mydiary">
+        SELECT mydiary.id, account.name as "userName", mydiary.userId, mydiary.songTitle, mydiary.playResource, mydiary.genre, mydiary.clickedNum, mydiary.open, mydiary.uploadDate, mydiary.uploadTime
+        FROM account, mydiary
+        where mydiary.userId = account.id and userId = #{userId} and mydiary.Id = #{mydiaryId}
     </select>
+
+    <update id="updateUserMydiarySong" parameterType="Mydiary">
+        update mydiary set songTitle=#{songTitle}, mydiary.open=#{open} where id = #{id} and userId = #{userId}
+    </update>
 
     <delete id="deleteUserMydiarySong">
         DELETE from mydiary where mydiary.Id = #{mydiaryId} and mydiary.userId = #{userId};

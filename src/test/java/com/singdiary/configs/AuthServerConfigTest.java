@@ -1,5 +1,6 @@
 package com.singdiary.configs;
 
+import com.singdiary.common.AppProperties;
 import com.singdiary.common.BaseControllerTest;
 import com.singdiary.common.TestDescription;
 import com.singdiary.dto.Account;
@@ -18,20 +19,17 @@ class AuthServerConfigTest extends BaseControllerTest {
     @Autowired
     AccountService accountService;
 
+    @Autowired
+    AppProperties appProperties;
+
     @Test
     @TestDescription("인증 토큰을 발급 받는 테스트")
     public void getAuthToken() throws Exception{
-        //given
-        String username = "uyoo2795";
-        String password = "pass";
-
-        String clientId = "myApp";
-        String clientSecret = "pass";
         this.mockMvc.perform(post("/oauth/token")
                             //basic auth라는 헤더를 만듦
-                            .with(httpBasic(clientId, clientSecret))
-                            .param("username", username)
-                            .param("password", password)
+                            .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                            .param("username", appProperties.getUserUsername())
+                            .param("password", appProperties.getUserPassword())
                             .param("grant_type", "password")
                         )
                         .andDo(print())

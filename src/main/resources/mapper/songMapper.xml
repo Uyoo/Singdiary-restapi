@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.singdiary.dao.SongRepository">
+
+    <insert id="insertSong" parameterType="Song">
+        INSERT INTO song(userId, songTitle, playResource, genre, clickedNum, open, uploadDate, uploadTime, publicCnt)
+        VALUES (#{userId}, #{songTitle}, #{playResource}, #{genre}, #{clickedNum}, #{open}, #{uploadDate}, #{uploadTime}, #{publicCnt})
+    </insert>
+
+    <!--<update id="updateSong" parameterType="Song">
+        update song set songTitle=#{songTitle}, song.open=#{open}, publicCnt = #{publicCnt}
+        where userId = #{userId} and playResource = #{playResource} and genre = #{genre} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime}
+    </update>-->
+
+    <update id="updateSong" parameterType="Song">
+        update song set songTitle=#{songTitle}, song.open=#{open}, publicCnt = #{publicCnt}
+        where id = #{id} and userId = #{userId}
+    </update>
+
+    <select id="queryUserSong" parameterType="Mydiary" resultType="Song">
+        SELECT song.id, account.name as "userName", song.userId, song.songTitle, song.playResource, song.genre, song.clickedNum, song.open, song.uploadDate, song.uploadTime, song.publicCnt
+        FROM account, song
+        where song.userId = account.id and userId = #{userId} and playResource = #{playResource} and genre = #{genre} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime}
+    </select>
+
+</mapper>

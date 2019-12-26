@@ -17,6 +17,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 
@@ -48,14 +49,14 @@ public class UserController {
         }
 
         AccountDto currUser = this.modelMapper.map(currentUser, AccountDto.class);
-        WebMvcLinkBuilder selfLinkBuilder = linkTo(UserController.class);
+        WebMvcLinkBuilder selfLinkBuilder = linkTo(UserController.class).slash(currentUser.getId());
         UserResources userResources = new UserResources(currUser);
 
         //self, get, update, delete
         userResources.add(selfLinkBuilder.withSelfRel());
-        userResources.add(selfLinkBuilder.slash(currentUser.getId()).withRel("get-user"));
-        userResources.add(selfLinkBuilder.slash(currentUser.getId()).withRel("update-user"));
-        userResources.add(selfLinkBuilder.slash(currentUser.getId()).withRel("delete-user"));
+        userResources.add(selfLinkBuilder.withRel("get-user"));
+        userResources.add(selfLinkBuilder.withRel("update-user"));
+        userResources.add(selfLinkBuilder.withRel("delete-user"));
 
         return ResponseEntity.ok().body(userResources);
     }
@@ -104,17 +105,22 @@ public class UserController {
 
 
         // role 부여 (admin or user)
-        newAccount.setRole("USER");
+        if(newAccount.getName().equals("admin")){
+            newAccount.setRole("ADMIN");
+        }
+        else {
+            newAccount.setRole("USER");
+        }
 
         //사용자 정보 삽입
         accountService.insertUser(newAccount);
-
 
         //삽입된 유저 정보
         newAccount = accountService.findByUsername(newAccount.getName());
         AccountDto newUser = this.modelMapper.map(newAccount, AccountDto.class);
 
         WebMvcLinkBuilder selfLinkBuilder = linkTo(UserController.class).slash(newAccount.getId());
+        URI createdURI = selfLinkBuilder.toUri();
         UserResources userResources = new UserResources(newUser);
 
         //self, get, post, update, delete
@@ -124,7 +130,7 @@ public class UserController {
         userResources.add(selfLinkBuilder.withRel("update-user"));
         userResources.add(selfLinkBuilder.withRel("delete-user"));
 
-        return ResponseEntity.ok().body(userResources);
+        return ResponseEntity.created(createdURI).body(userResources);
     }
 
 }

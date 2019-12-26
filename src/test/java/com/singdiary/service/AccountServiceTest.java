@@ -1,5 +1,6 @@
 package com.singdiary.service;
 
+import com.singdiary.common.AppProperties;
 import com.singdiary.common.TestDescription;
 import com.singdiary.dao.UserRepository;
 import com.singdiary.dto.Account;
@@ -29,26 +30,25 @@ public class AccountServiceTest {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    AppProperties appProperties;
+
     @Test
     @TestDescription("해당 아이디가 우리 서비스 회원이라면 정상 조회")
     public void findByUsername() throws Exception {
-        //given
-        String username = "user";
-        String password = "userpassword";
-
         Account account = Account.builder()
-                    .name(username)
-                    .password(password)
+                    .name(appProperties.getUserUsername())
+                    .password(appProperties.getUserPassword())
                     .build();
         account.init();
         account.setRole("USER");
 //        this.accountService.insertUser(account);
 
         //when
-        UserDetails userDetails = accountService.loadUserByUsername(username);
+        UserDetails userDetails = accountService.loadUserByUsername(account.getName());
 
         //then
-        assertThat(passwordEncoder.matches(password, userDetails.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(account.getPassword(), userDetails.getPassword())).isTrue();
     }
 
     @Test

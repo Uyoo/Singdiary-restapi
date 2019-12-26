@@ -5,7 +5,9 @@ import com.singdiary.common.BaseControllerTest;
 import com.singdiary.common.TestDescription;
 import com.singdiary.dto.Account;
 import com.singdiary.dto.Mydiary;
+import com.singdiary.dto.Mydiary_Update;
 import com.singdiary.service.AccountService;
+import com.singdiary.service.MydiaryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
@@ -16,7 +18,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,12 +31,15 @@ class MydiaryControllerTest extends BaseControllerTest {
     @Autowired
     AccountService accountService;
 
+    @Autowired
+    MydiaryService mydiaryService;
+
     @Test
     @TestDescription("해당 사용자의 마이 다이어리에 곡 업로드 정상 처리")
     public void addUserMydiarySong() throws Exception{
         Mydiary mydiary = Mydiary.builder()
-                    .songTitle("song1")
-                    .genre("balad")
+                    .songTitle("song4")
+                    .genre("pop")
                     .playResource("../../")
                     .build();
 
@@ -118,6 +123,133 @@ class MydiaryControllerTest extends BaseControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$[0].objectName").exists())
                 .andExpect(jsonPath("$[0].defaultMessage").exists())
+        ;
+    }
+
+    @Test
+    @TestDescription("해당 사용자의 마이 다이어리 곡들 리스트 조회 정상 처리")
+    public void queryUserMydiary() throws Exception {
+        Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+
+        this.mockMvc.perform(get("/users/{userId}/mydiary", user.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .param("pageNum", "1")
+                .param("pageSize", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @Test
+    @TestDescription("해당 사용자가 업로드한 마이 다이어리의 곡 하나 정보 조회 정상 처리")
+    public void queryUserMydiarySong() throws Exception {
+        Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+        Mydiary mydiary = Mydiary.builder()
+                        .id(1)
+                        .build();
+
+        this.mockMvc.perform(get("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @Test
+    @TestDescription("mydiaryId가 해당 사용자의 곡이 아닌 경우")
+    public void queryUserMydiarySong_NotUserSong() throws Exception {
+        Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+        Mydiary mydiary = Mydiary.builder()
+                .id(123122)
+                .build();
+
+        this.mockMvc.perform(get("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+        ;
+    }
+
+
+    @Test
+    @TestDescription("해당 사용자의 마이 다이어리 곡 하나 정보 수정 정상 처리")
+    public void patchUserMydiarySong() throws Exception {
+        Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+        Mydiary mydiary = Mydiary.builder()
+                .id(1)
+                .build();
+
+        Mydiary userMydiarySong = this.mydiaryService.findUserMydiarySong(user.getId(), mydiary.getId());
+        Mydiary_Update mydiaryUpdate = new Mydiary_Update();
+
+        //곡 제목 수정, private 유지
+        /*mydiaryUpdate.setSongTitle("song1_update");
+        mydiaryUpdate.setOpen(userMydiarySong.isOpen());*/
+
+        //곡 제목 유지, public -> private 변경 or private -> public
+        mydiaryUpdate.setSongTitle(userMydiarySong.getSongTitle());
+        mydiaryUpdate.setOpen(!userMydiarySong.isOpen());
+
+        this.mockMvc.perform(patch("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(mydiaryUpdate))
+        )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @Test
+    @TestDescription("해당 사용자의 마이 다이어리 곡 하나 정보 수정 입력이 비어있는 경우")
+    public void patchUserMydiarySong_EmptyData() throws Exception {
+        Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+        Mydiary mydiary = Mydiary.builder()
+                .id(1)
+                .build();
+
+        Mydiary userMydiarySong = this.mydiaryService.findUserMydiarySong(user.getId(), mydiary.getId());
+        Mydiary_Update mydiaryUpdate = new Mydiary_Update();
+
+        //곡 제목 누락
+        mydiaryUpdate.setOpen(userMydiarySong.isOpen());
+
+        this.mockMvc.perform(patch("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(mydiaryUpdate))
+        )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+        ;
+    }
+
+    @Test
+    @TestDescription("해당 사용자의 마이 다이어리 곡 하나 정보 삭제 정상 처리")
+    public void deleteUserMydiarySong() throws Exception {
+        Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+        Mydiary mydiary = Mydiary.builder()
+                .id(4)
+                .build();
+
+        this.mockMvc.perform(delete("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isNoContent())
         ;
     }
 
