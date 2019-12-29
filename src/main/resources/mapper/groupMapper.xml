@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.singdiary.dao.GroupRepository">
+
+    <select id="findGroupByName" resultType="Group">
+        select * from groups where name = #{groupname}
+    </select>
+
+    <insert id="insertGroup">
+        INSERT INTO groups(name, manager, profileImage, backgroundImage, managerId)
+        VALUES (#{name}, #{manager}, #{profileImage}, #{backgroundImage}, #{managerId})
+    </insert>
+
+    <insert id="insertUserGroup">
+        INSERT INTO usergroup
+        VALUES (#{userId}, #{group.id})
+    </insert>
+
+    <select id="findAllGroups" resultType="Group">
+        select * from groups
+    </select>
+
+    <select id="findUserGroups" resultType="Group">
+        select groups.id, groups.name, groups.manager, groups.profileImage, groups.backgroundImage, groups.managerId
+        from groups, usergroup
+        where groups.id = usergroup.groupId and usergroup.userId = #{userId};
+    </select>
+
+    <select id="findUserGroup" resultType="GroupDto">
+        select groups.id, groups.name, groups.manager, groups.profileImage, groups.backgroundImage, groups.managerId, usergroup.userId, account.name as "username"
+        from groups, usergroup, account
+        where groups.id = usergroup.groupId and account.id = usergroup.userId and usergroup.userId = #{userId} and groups.id = #{group.id};
+    </select>
+
+    <select id="findGroupByGroupId" resultType="Group">
+        select * from groups where id = #{groupId}
+    </select>
+
+    <update id="updateUserGroup" parameterType="Group">
+        update groups
+        set groups.name = #{name}, manager = #{manager}, profileImage = #{profileImage}, backgroundImage = #{backgroundImage}, managerId = #{managerId}
+        where id = #{id}
+    </update>
+
+</mapper>

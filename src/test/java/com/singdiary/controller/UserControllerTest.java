@@ -75,8 +75,8 @@ class UserControllerTest extends BaseControllerTest {
     @TestDescription("사용자 정보 추가 정상 처리")
     public void addUser() throws Exception {
         Account newAccount = Account.builder()
-                .name(appProperties.getUserUsername())
-                .password(appProperties.getUserPassword())
+                .name("user2")
+                .password("test2")
                 .build();
 
         this.mockMvc.perform(post("/users")

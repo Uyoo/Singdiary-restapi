@@ -23,7 +23,7 @@ public class Account {
     private int active;                 //로그인 상태 유무
     private String role;                //admin, user
 
-    public void init() {
+    public void init_images() {
         if(profileImage == null || profileImage.equals("")){
             this.profileImage = "default image";
         }

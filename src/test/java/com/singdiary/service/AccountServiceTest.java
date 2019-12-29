@@ -40,7 +40,7 @@ public class AccountServiceTest {
                     .name(appProperties.getUserUsername())
                     .password(appProperties.getUserPassword())
                     .build();
-        account.init();
+        account.init_images();
         account.setRole("USER");
 //        this.accountService.insertUser(account);
 

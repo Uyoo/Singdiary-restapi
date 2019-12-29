@@ -94,7 +94,7 @@ public class UserController {
 
 
         //만약 이미지 파일이 없다면 기본 이미지 파일 제공
-        newAccount.init();
+        newAccount.init_images();
 
         // 만약 이미지 파일이 존재한다면
         // 사용자의 프로필, 배경 이미지 파일을 우리 서버 파일에 저장
