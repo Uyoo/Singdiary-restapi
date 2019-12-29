@@ -17,6 +17,9 @@ public class Group {
     private String backgroundImage;
     private Integer managerId;      //그룹장 id
 
+    private Integer memberCount;    //멤버 수
+    private boolean joined;         //가입 되어있는지 여부
+
     public void init_images() {
         if(profileImage == null || profileImage.equals("")){
             this.profileImage = "default image";

@@ -82,6 +82,9 @@ public class GroupController {
 
         //group 테이블에 생성한 그룹 정보 조회
         Group group = groupService.findGroupByName(newGroup.getName());
+        Integer memberCnt = groupService.getUserGroupMemberCount(group);   //멤버 수
+        group.setJoined(true);
+        group.setMemberCount(memberCnt);
 
         //usergroup 테이블에도 삽입
         groupService.insertUserGroup(group, currentUser.getId());
@@ -138,6 +141,15 @@ public class GroupController {
 
             List<GroupResources> groupResourcesList = new LinkedList<>();
             for(Group group : allGroups){
+                //해당 사용자가 그룹원인지 판단
+                GroupDto userGroup = groupService.findUserGroup(group, currentUser.getId());
+                boolean joined = false;
+                Integer memberCnt = groupService.getUserGroupMemberCount(group);   //멤버 수
+                if(userGroup != null) joined = true;
+
+                group.setJoined(joined);
+                group.setMemberCount(memberCnt);
+
                 GroupResources resources = new GroupResources(group);
 
                 //self, get, update(매니저만), delete(매니저만), profile
@@ -182,7 +194,7 @@ public class GroupController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            //groups와 usergroup 테이블 조인, userId를 이용해 해당 사용자가 속한 그룹 목록 조회
+            //groups와 usergroup 테이블 조인, userId를 이용해 해당 사용자가 속한 그룹들 목록 조회
             List<Group> userGroups = groupService.findUserGroups(currentUser.getId(), pageNum, pageSize);
 
             //해당 사용자가 속한 그룹이 없다면
@@ -194,6 +206,11 @@ public class GroupController {
 
             List<GroupResources> groupResourcesList = new LinkedList<>();
             for(Group group : userGroups){
+                //해당 사용자가 그룹원인지 판단
+                Integer memberCnt = groupService.getUserGroupMemberCount(group);   //멤버 수
+                group.setJoined(true);
+                group.setMemberCount(memberCnt);
+
                 GroupResources resources = new GroupResources(group);
 
                 //self, get, update(매니저만), delete(매니저만), profile
@@ -251,10 +268,12 @@ public class GroupController {
 
         //해당 사용자가 그룹원인지 판단 (그룹원이 아니라면 '가입하기', 그룹원이라면 정보 제공)
         GroupDto userGroup = groupService.findUserGroup(existGroup, currentUser.getId());
-        if(userGroup == null){
-            map.put("message", "그룹원이 아닙니다");
-            return ResponseEntity.badRequest().body(map);
-        }
+        boolean joined = false;
+        Integer memberCnt = groupService.getUserGroupMemberCount(existGroup);   //멤버 수
+        if(userGroup != null) joined = true;
+
+        existGroup.setJoined(joined);
+        existGroup.setMemberCount(memberCnt);
 
         //self, update(manager만), delete(manager만), profile
         WebMvcLinkBuilder selfLinkBuilder = linkTo(methodOn(GroupController.class).queryUserGroup(currentUser, groupId));

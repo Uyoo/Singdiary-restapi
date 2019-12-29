@@ -34,4 +34,7 @@ public interface GroupRepository {
     @Description("groups 테이블에 그룹명, 프로필 및 배경 이미지, 그룹장 위임 정보 업데이트")
     void updateUserGroup(Group group) throws Exception;
 
+    @Description("usergroup 테이블에서 해당 그룹에 속한 그룹원 수 카운팅")
+    Integer getUserGroupMemberCount(Group group) throws Exception;
+
 }

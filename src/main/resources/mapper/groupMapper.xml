@@ -23,7 +23,7 @@
     <select id="findUserGroups" resultType="Group">
         select groups.id, groups.name, groups.manager, groups.profileImage, groups.backgroundImage, groups.managerId
         from groups, usergroup
-        where groups.id = usergroup.groupId and usergroup.userId = #{userId};
+        where groups.id = usergroup.groupId and usergroup.userId = #{userId}
     </select>
 
     <select id="findUserGroup" resultType="GroupDto">
@@ -41,5 +41,9 @@
         set groups.name = #{name}, manager = #{manager}, profileImage = #{profileImage}, backgroundImage = #{backgroundImage}, managerId = #{managerId}
         where id = #{id}
     </update>
+
+    <select id="getUserGroupMemberCount" resultType="Integer">
+        select count(*) as "memberCount" from usergroup where groupId = #{id}
+    </select>
 
 </mapper>

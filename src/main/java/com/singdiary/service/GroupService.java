@@ -59,4 +59,8 @@ public class GroupService {
         this.groupRepository.updateUserGroup(group);
     }
 
+    @Description("해당 그룹에 속한 그룹원 수 카운팅")
+    public Integer getUserGroupMemberCount(Group group) throws Exception {
+        return this.groupRepository.getUserGroupMemberCount(group);
+    }
 }
