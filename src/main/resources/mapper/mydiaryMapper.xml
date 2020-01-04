@@ -26,7 +26,7 @@
     </select>
 
     <update id="updateUserMydiarySong" parameterType="Mydiary">
-        update mydiary set songTitle=#{songTitle}, mydiary.open=#{open} where id = #{id} and userId = #{userId}
+        update mydiary set songTitle=#{songTitle}, genre=#{genre}, mydiary.open=#{open} where id = #{id} and userId = #{userId}
     </update>
 
     <delete id="deleteUserMydiarySong">

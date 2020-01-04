@@ -4,6 +4,7 @@ import com.singdiary.common.AppProperties;
 import com.singdiary.common.BaseControllerTest;
 import com.singdiary.common.TestDescription;
 import com.singdiary.dto.Account;
+import com.singdiary.dto.Group;
 import com.singdiary.dto.Mydiary;
 import com.singdiary.dto.Mydiary_Update;
 import com.singdiary.service.AccountService;
@@ -192,12 +193,14 @@ class MydiaryControllerTest extends BaseControllerTest {
         Mydiary_Update mydiaryUpdate = new Mydiary_Update();
 
         //곡 제목 수정, private 유지
-        /*mydiaryUpdate.setSongTitle("song1_update");
-        mydiaryUpdate.setOpen(userMydiarySong.isOpen());*/
+        mydiaryUpdate.setSongTitle("song1_update");
+        mydiaryUpdate.setGenre(userMydiarySong.getGenre());
+        mydiaryUpdate.setOpen(userMydiarySong.isOpen());
 
         //곡 제목 유지, public -> private 변경 or private -> public
-        mydiaryUpdate.setSongTitle(userMydiarySong.getSongTitle());
-        mydiaryUpdate.setOpen(!userMydiarySong.isOpen());
+        /*mydiaryUpdate.setSongTitle(userMydiarySong.getSongTitle());
+        mydiaryUpdate.setGenre(userMydiarySong.getGenre());
+        mydiaryUpdate.setOpen(!userMydiarySong.isOpen());*/
 
         this.mockMvc.perform(patch("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
                 .header(HttpHeaders.AUTHORIZATION, getBearerToken())
@@ -253,6 +256,27 @@ class MydiaryControllerTest extends BaseControllerTest {
         ;
     }
 
+
+    @Test
+    @TestDescription("해당 사용자의 마이 다이어리 곡 하나를 그룹에 공유 (한 그룹 씩 가능)")
+    public void shareMydiarySongToGroup() throws Exception {
+        Mydiary mydiary = Mydiary.builder()
+                .id(3)
+                .build();
+
+        Group group = Group.builder()
+                .id(3)
+                .build();
+
+        this.mockMvc.perform(post("/mydiary/{mydiaryId}/share/groups/{groupId}", mydiary.getId(), group.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isCreated())
+        ;
+    }
 
 
     private String getBearerToken() throws Exception {

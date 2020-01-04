@@ -2,7 +2,6 @@ package com.singdiary.service;
 
 import com.singdiary.common.Description;
 import com.singdiary.dao.SongRepository;
-import com.singdiary.dto.Mydiary;
 import com.singdiary.dto.Song;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,12 @@ public class SongService {
     }
 
     @Description("해당 사용자 곡 정보 조회")
-    public Song queryUserSong(Mydiary song) throws Exception {
+    public Song queryUserSong(Song song) throws Exception {
         return this.songRepository.queryUserSong(song);
+    }
+
+    @Description("해당 사용자 곡 정보 삭제")
+    public void deleteUserSong(Song song) throws Exception {
+        this.songRepository.deleteUserSong(song);
     }
 }

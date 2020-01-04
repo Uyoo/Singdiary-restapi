@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.singdiary.dao.GroupDiaryRepository">
+
+    <insert id="insertUserGroupDiary" parameterType="GroupDiary">
+        INSERT INTO groupdiary(groupId, songTitle, playResource, genre, clickedNum, open, uploadDate, uploadTime, userId)
+        VALUES (#{groupId}, #{songTitle}, #{playResource}, #{genre}, #{clickedNum}, #{open}, #{uploadDate}, #{uploadTime}, #{userId})
+    </insert>
+
+    <select id="findUserGroupdiaryUploadSong" parameterType="GroupDiary" resultType="GroupDiary">
+        SELECT groupdiary.id, groupdiary.groupId, groups.name as "groupName", groupdiary.songTitle,
+        groupdiary.playResource, groupdiary.genre, groupdiary.clickedNum, groupdiary.open,
+        groupdiary.uploadDate, groupdiary.uploadTime,
+        groupdiary.userId, account.name as "userName"
+        FROM account, groupdiary, groups
+        where groups.Id = groupdiary.groupId and groupdiary.userId = account.id
+        and userId = #{userId} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime}
+    </select>
+
+    <select id="findUserGroupGroupdiarySongs" parameterType="Integer" resultType="GroupDiary">
+        SELECT groupdiary.id, groupdiary.groupId, groups.name as "groupName", groupdiary.songTitle,
+        groupdiary.playResource, groupdiary.genre, groupdiary.clickedNum, groupdiary.open,
+        groupdiary.uploadDate, groupdiary.uploadTime,
+        groupdiary.userId, account.name as "userName"
+        FROM account, groupdiary, groups
+        where groups.Id = groupdiary.groupId and groupdiary.userId = account.id and groups.id = #{groupId}
+    </select>
+
+    <select id="findUserGroupGroupdiarySong" parameterType="Integer" resultType="GroupDiary">
+        SELECT groupdiary.id, groupdiary.groupId, groups.name as "groupName", groupdiary.songTitle,
+        groupdiary.playResource, groupdiary.genre, groupdiary.clickedNum, groupdiary.open,
+        groupdiary.uploadDate, groupdiary.uploadTime,
+        groupdiary.userId, account.name as "userName"
+        FROM account, groupdiary, groups
+        where groups.Id = groupdiary.groupId and groupdiary.userId = account.id and groups.id = #{groupId} and groupdiary.id = #{groupdiaryId}
+    </select>
+
+    <update id="updateUserGroupdiarySong" parameterType="GroupDiary">
+        update groupdiary set songTitle=#{songTitle}, genre=#{genre}, groupdiary.open=#{open} where id = #{id} and userId = #{userId}
+    </update>
+
+    <delete id="deleteUserGroupdiarySong">
+        DELETE from groupdiary where groupdiary.Id = #{groupdiaryId} and groupdiary.userId = #{userId};
+    </delete>
+
+</mapper>

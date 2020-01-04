@@ -146,7 +146,6 @@ public class GroupController {
                 boolean joined = false;
                 Integer memberCnt = groupService.getUserGroupMemberCount(group);   //멤버 수
                 if(userGroup != null) joined = true;
-
                 group.setJoined(joined);
                 group.setMemberCount(memberCnt);
 
@@ -200,13 +199,12 @@ public class GroupController {
             //해당 사용자가 속한 그룹이 없다면
             if(userGroups.size() == 0 || userGroups == null) {
                 HashMap<String, String> map = new HashMap<>();
-                map.put("message", "속한 그룹이 존재하지 않습니다");
+                map.put("message", "가입한 그룹이 존재하지 않습니다");
                 return ResponseEntity.ok().body(map);
             }
 
             List<GroupResources> groupResourcesList = new LinkedList<>();
             for(Group group : userGroups){
-                //해당 사용자가 그룹원인지 판단
                 Integer memberCnt = groupService.getUserGroupMemberCount(group);   //멤버 수
                 group.setJoined(true);
                 group.setMemberCount(memberCnt);
@@ -262,7 +260,8 @@ public class GroupController {
         HashMap<String, String> map = new HashMap<>();
         Group existGroup = groupService.findGroupByGroupId(groupId);
         if(existGroup == null){
-            map.put("message", "해당 그룹이 존재하지 않습니다");
+            //map.put("message", "해당 그룹이 존재하지 않습니다");
+            map.put("message", "존재하지 않는 그룹입니다");
             return ResponseEntity.badRequest().body(map);
         }
 
@@ -304,7 +303,8 @@ public class GroupController {
         HashMap<String, String> map = new HashMap<>();
         Group existGroup = groupService.findGroupByGroupId(groupId);
         if(existGroup == null){
-            map.put("message", "해당 그룹이 존재하지 않습니다");
+            //map.put("message", "해당 그룹이 존재하지 않습니다");
+            map.put("message", "존재하지 않는 그룹입니다");
             return ResponseEntity.badRequest().body(map);
         }
 
@@ -362,6 +362,9 @@ public class GroupController {
 
         //업데이트된 그룹의 정보 조회
         Group updatedGroup = groupService.findGroupByGroupId(groupId);
+        Integer memberCnt = groupService.getUserGroupMemberCount(updatedGroup);
+        updatedGroup.setMemberCount(memberCnt);
+        updatedGroup.setJoined(true);
 
         //self, update(manager만), delete(manager만), profile
         WebMvcLinkBuilder selfLinkBuilder = linkTo(methodOn(GroupController.class).patchUserGroup(currentUser, groupId, groupRequest, errors));

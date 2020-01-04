@@ -7,9 +7,7 @@ import com.singdiary.dto.template_get.Paging;
 import com.singdiary.dto.template_get.QueryUserMydiary;
 import com.singdiary.linkResources.MydiaryResources;
 import com.singdiary.linkResources.MydiaryResources_List;
-import com.singdiary.service.AccountService;
-import com.singdiary.service.MydiaryService;
-import com.singdiary.service.SongService;
+import com.singdiary.service.*;
 import com.singdiary.validator.UserValidator;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +39,13 @@ public class MydiaryController {
     MydiaryService mydiaryService;
 
     @Autowired
+    GroupdiaryService groupdiaryService;
+
+    @Autowired
     SongService songService;
+
+    @Autowired
+    GroupService groupService;
 
     private final ModelMapper modelMapper;
     private final UserValidator userValidator;
@@ -67,7 +71,6 @@ public class MydiaryController {
         if(currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         //요청을 보낸 사용자와 userId가 일치하는지
-        //Account currUser = accountService.findByUsername(currentUser.getName());
         userValidator.validator_matchUser(currentUser, userId, errors);
         if(errors.hasErrors()) return ResponseEntity.badRequest().body(errors);
 
@@ -219,7 +222,7 @@ public class MydiaryController {
                                                @RequestBody @Valid Mydiary_Update mydiaryUpdate,
                                                Errors errors) throws Exception {
 
-        //곡 제목, public 전환이 가능
+        //곡 제목, 장르, public 전환이 가능
         //body의 데이터 입력이 비어있다면 badrequest
         if(errors.hasErrors()) return ResponseEntity.badRequest().body(errors);
 
@@ -230,8 +233,6 @@ public class MydiaryController {
         userValidator.validator_matchUser(currentUser, userId, errors);
         if(errors.hasErrors()) return ResponseEntity.badRequest().body(errors);
 
-
-        //mydiaryId가 해당 사용자의 곡이 아닌 경우
         //곡 조회
         Mydiary userMydiarySong = mydiaryService.findUserMydiarySong(currentUser.getId(), mydiaryId);
 
@@ -244,17 +245,28 @@ public class MydiaryController {
 
         //mydiary 테이블에 업데이트
         userMydiarySong.setSongTitle(mydiaryUpdate.getSongTitle());
+        userMydiarySong.setGenre(mydiaryUpdate.getGenre());
         userMydiarySong.setOpen(mydiaryUpdate.isOpen());
         mydiaryService.updateUserMydiarySong(userMydiarySong);
 
-        //groupdiary 테이블 조회
+        //groupdiary 테이블에도 해당 곡이 존재하는지 조회 (list 형태 - 2그룹 이상에 있을 수도 있음)
+        GroupDiary userGroupDiarySong = modelMapper.map(userMydiarySong, GroupDiary.class);
+        List<GroupDiary> userGroupDiarySongs = groupdiaryService.findUserGroupdiaryUploadSong(userGroupDiarySong);
 
-        //없다면 업데이트 x, 있다면 업데이트
+        //존재한다면 해당 곡 정보도 수정
+        for(GroupDiary groupDiarySong : userGroupDiarySongs){
+            groupDiarySong.setSongTitle(userMydiarySong.getSongTitle());
+            groupDiarySong.setGenre(userMydiarySong.getGenre());
+            groupDiarySong.setOpen(userMydiarySong.isOpen());
 
+            groupdiaryService.updateUserGroupdiarySong(groupDiarySong);
+        }
 
-        //song 테이블 조회
-        Song userSong = songService.queryUserSong(userMydiarySong);
+        //song 테이블에도 해당 곡 정보 조회
+        Song updateSong = modelMapper.map(userMydiarySong, Song.class);
+        Song userSong = songService.queryUserSong(updateSong);
         userSong.setSongTitle(userMydiarySong.getSongTitle());
+        userSong.setGenre(userMydiarySong.getGenre());
 
         //open = true라면
         if(userMydiarySong.isOpen()){
@@ -271,7 +283,6 @@ public class MydiaryController {
 
         //song 테이블에 업데이트
         songService.updateSong(userSong);
-
 
         //업데이트된 정보 조회
         userMydiarySong = mydiaryService.findUserMydiarySong(currentUser.getId(), mydiaryId);
@@ -317,13 +328,87 @@ public class MydiaryController {
         //해당 곡 삭제
         mydiaryService.deleteUserMydiarySong(currentUser.getId(), mydiaryId);
 
-
         //그룹 다이어리에도 존재하는지 조회 (mydiaryId, userId)
-        //있다면 song 테이블에는 삭제 x
-        //없다면 song 테이블에도 삭제
+        boolean songRemained = false;
+        GroupDiary groupDiary = modelMapper.map(userMydiarySong, GroupDiary.class);
+        List<GroupDiary> groupdiarySongList = groupdiaryService.findUserGroupdiaryUploadSong(groupDiary);
+        if(groupdiarySongList.size() > 0) songRemained = true;
 
+        //없다면 song 테이블에도 삭제
+        if(!songRemained){
+            Song deleteSong = modelMapper.map(userMydiarySong, Song.class);
+            songService.deleteUserSong(deleteSong);
+        }
 
         return ResponseEntity.noContent().build();
+    }
+
+
+    @Description("해당 사용자의 마이 다이어리 곡 하나를 그룹에 공유 (한 그룹 씩 가능)")
+    @PostMapping(value = "/mydiary/{mydiaryId}/share/groups/{groupId}")
+    public ResponseEntity shareMydiarySongToGroup(@CurrentUser Account currentUser,
+                                                  @PathVariable Integer mydiaryId,
+                                                  @PathVariable Integer groupId) throws Exception {
+
+        //요청을 보낸 사용자가 우리 서비스의 회원인지
+        if(currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        //해당 사용자가 mydiaryId 곡 주인인지 확인
+        HashMap<String, String> map = new HashMap<>();
+        Mydiary userMydiarySong = mydiaryService.findUserMydiarySong(currentUser.getId(), mydiaryId);
+        if(userMydiarySong == null) {
+            map.put("message", "해당 사용자의 곡이 아닙니다");
+            return ResponseEntity.badRequest().body(map);
+        }
+
+        //groupId(해당 그룹)이 존재하는지 확인
+        Group existGroup = groupService.findGroupByGroupId(groupId);
+        if(existGroup == null){
+            map.put("message", "존재하지 않는 그룹입니다");
+            return ResponseEntity.badRequest().body(map);
+        }
+
+        //해당 사용자가 그룹원인지 확인
+        Group group = new Group();
+        group.setId(groupId);
+        GroupDto userGroup = groupService.findUserGroup(group, currentUser.getId());
+        if(userGroup == null){
+            map.put("message", "해당 사용자는 그룹원이 아닙니다");
+            return ResponseEntity.badRequest().body(map);
+        }
+
+        //공유하고자 하는 그룹의 다이어리에 곡이 이미 공유가 되어있는지 확인
+        GroupDiary groupDiary = modelMapper.map(userMydiarySong, GroupDiary.class);
+        List<GroupDiary> userGroupsSong = groupdiaryService.findUserGroupdiaryUploadSong(groupDiary);
+        boolean shared = false;
+        for(GroupDiary song : userGroupsSong){
+            if(song.getGroupId() == groupId) {
+                shared = true;
+                break;
+            }
+        }
+        if(shared) {
+            map.put("message", "이미 공유된 곡입니다");
+            return ResponseEntity.badRequest().body(map);
+        }
+
+        //해당 그룹에 곡 정보 추가
+        groupDiary.setGroupId(groupId);
+        groupdiaryService.insertUserGroupDiary(groupDiary);
+
+        userGroupsSong = groupdiaryService.findUserGroupdiaryUploadSong(groupDiary);
+        GroupDiary sharedGroupdiary = null;
+        for(GroupDiary song : userGroupsSong){
+            if(song.getGroupId() == groupId){
+                sharedGroupdiary = song;
+                break;
+            }
+        }
+
+        WebMvcLinkBuilder selfLinkBuilder = linkTo(methodOn(GroupController.class).addGroup(currentUser, null, null));
+        URI createdURI = selfLinkBuilder.slash(groupId).slash("groupdiary").slash(sharedGroupdiary.getId()).toUri();
+
+        return ResponseEntity.created(createdURI).build();
     }
 
 

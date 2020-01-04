@@ -13,14 +13,18 @@
     </update>-->
 
     <update id="updateSong" parameterType="Song">
-        update song set songTitle=#{songTitle}, song.open=#{open}, publicCnt = #{publicCnt}
+        update song set songTitle=#{songTitle}, genre=#{genre}, song.open=#{open}, publicCnt = #{publicCnt}
         where id = #{id} and userId = #{userId}
     </update>
 
-    <select id="queryUserSong" parameterType="Mydiary" resultType="Song">
+    <select id="queryUserSong" parameterType="Song" resultType="Song">
         SELECT song.id, account.name as "userName", song.userId, song.songTitle, song.playResource, song.genre, song.clickedNum, song.open, song.uploadDate, song.uploadTime, song.publicCnt
         FROM account, song
         where song.userId = account.id and userId = #{userId} and playResource = #{playResource} and genre = #{genre} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime}
     </select>
+
+    <delete id="deleteUserSong">
+        DELETE from song where song.Id = #{id} and song.userId = #{userId};
+    </delete>
 
 </mapper>

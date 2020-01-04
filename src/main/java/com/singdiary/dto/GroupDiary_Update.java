@@ -8,15 +8,12 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor @NoArgsConstructor
 @Getter @Setter
 @Builder
-public class Mydiary_Update {
+public class GroupDiary_Update {
 
     @NotEmpty
     private String songTitle;
-
     @NotEmpty
     private String genre;
-
     @NotNull
-    private boolean open;   //true: public, false: private
-
+    private boolean open;           //true: public, false: private
 }

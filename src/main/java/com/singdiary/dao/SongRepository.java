@@ -1,7 +1,6 @@
 package com.singdiary.dao;
 
 import com.singdiary.common.Description;
-import com.singdiary.dto.Mydiary;
 import com.singdiary.dto.Song;
 import org.springframework.stereotype.Repository;
 
@@ -15,5 +14,8 @@ public interface SongRepository {
     void updateSong(Song newSong) throws Exception;
 
     @Description("song 테이블에 해당 사용자 곡 정보 조회")
-    Song queryUserSong(Mydiary song) throws Exception;
+    Song queryUserSong(Song song) throws Exception;
+
+    @Description("song 테이블에서 해당 사용자 곡 정보 삭제")
+    void deleteUserSong(Song song) throws Exception;
 }
