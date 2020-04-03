@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -77,6 +79,9 @@ public class MydiaryController {
 
         //업로드 시간, 클릭 수, 비공개 초기화
         mydiary.init();
+
+        //장르 소문자로 통일
+        mydiary.setGenre(mydiary.getGenre().toLowerCase());
 
         //사용자의 업로드 곡 파일을 우리 서버 파일에 저장
         //(해당 디바이스 경로를 붙여주고 or 사용자 이름을 붙여준다던지)
@@ -272,6 +277,22 @@ public class MydiaryController {
         if(userMydiarySong.isOpen()){
             //publicCnt+1 한 뒤 업데이트
             Integer publicCnt = userSong.getPublicCnt();
+
+            //public 전환을 처음 한다면
+            if(publicCnt <= 0){
+
+                //public 전환 날짜를 현재 날짜로 갱신, publicCnt++
+                SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss");
+                Date now = new Date();
+
+                String current = formatter.format(now);
+                String[] tokens = current.split(" ");
+                userSong.setPublicDate(tokens[0]);
+            }
+
+            //전환한 적이 존재한다면 -> publicCnt++
+            else userSong.setPublicDate(userSong.getPublicDate());
+
             userSong.setPublicCnt(++publicCnt);
             userSong.setOpen(userMydiarySong.isOpen());
         }

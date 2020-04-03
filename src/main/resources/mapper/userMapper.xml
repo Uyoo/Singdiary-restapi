@@ -15,4 +15,9 @@
         VALUES (#{name}, #{password}, #{profileImage}, #{backgroundImage}, #{active}, #{role})
     </insert>
 
+    <update id="updateUserInfo" parameterType="Account">
+        update account set account.name=#{name}, account.password=#{password}, profileImage=#{profileImage}, backgroundImage=#{backgroundImage}
+        where id = #{id} and account.name = #{name}
+    </update>
+
 </mapper>

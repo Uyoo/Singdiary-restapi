@@ -1,11 +1,13 @@
 package com.singdiary.controller;
 
+import com.singdiary.common.AwsCloudProperties;
 import com.singdiary.common.Description;
 import com.singdiary.dto.Account;
 import com.singdiary.dto.AccountDto;
 import com.singdiary.dto.CurrentUser;
 import com.singdiary.linkResources.UserResources;
 import com.singdiary.service.AccountService;
+import com.singdiary.service.S3Service;
 import com.singdiary.validator.UserValidator;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +15,10 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -29,6 +33,15 @@ public class UserController {
 
     @Autowired
     AccountService accountService;
+
+    @Autowired
+    S3Service s3Service;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AwsCloudProperties awsCloudProperties;
 
     private final ModelMapper modelMapper;
     private final UserValidator userValidator;
@@ -49,6 +62,11 @@ public class UserController {
         }
 
         AccountDto currUser = this.modelMapper.map(currentUser, AccountDto.class);
+
+        //프로필, 배경 이미지 url로 변환
+        currUser.setProfileImage(awsCloudProperties.getUrl() + currUser.getProfileImage());
+        currUser.setBackgroundImage(awsCloudProperties.getUrl() + currUser.getBackgroundImage());
+
         WebMvcLinkBuilder selfLinkBuilder = linkTo(UserController.class).slash(currentUser.getId());
         UserResources userResources = new UserResources(currUser);
 
@@ -131,6 +149,64 @@ public class UserController {
         userResources.add(selfLinkBuilder.withRel("delete-user"));
 
         return ResponseEntity.created(createdURI).body(userResources);
+    }
+
+    @Description("회원 정보 수정 - 아이디, 비밀번호, 프로필, 배경 이미지")
+    @PatchMapping
+    public ResponseEntity updateUserInfo(@CurrentUser Account currentUser,
+                                         @RequestParam(value = "name", required = false) String username,
+                                         @RequestParam(value = "password", required = false) String password,
+                                         @RequestParam(value = "profileImage", required = false) MultipartFile file_profileImage,
+                                         @RequestParam(value = "backgroundImage", required = false) MultipartFile file_backgroundImage) throws Exception {
+
+        if(currentUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Account userInfo = accountService.findByUsername(currentUser.getName());
+
+        //name, password, profile, backgroundImage 중 수정할 요소가 있는지 확인
+        if(username != null && !username.equals("")
+                && !username.equals(userInfo.getName())) {
+
+            userInfo.setName(username);
+        }
+
+        if(password != null && !password.equals("")
+                && !passwordEncoder.encode(password).equals(userInfo.getPassword())){
+
+            userInfo.setPassword(passwordEncoder.encode(password));
+        }
+
+        if(file_profileImage != null && !file_profileImage.equals("")
+                && !file_profileImage.getOriginalFilename().equals(userInfo.getProfileImage())) {
+
+            //HashMap<String, String> datas = s3Service.upload(userInfo.getProfileImage(), file_profileImage);
+            //userInfo.setProfileImage(datas.get("fileName"));
+            //profileImgUrl = datas.get("imgUrl");
+
+            String profileImage = s3Service.upload(userInfo.getProfileImage(), file_profileImage);
+            userInfo.setProfileImage(profileImage);
+        }
+
+        if(file_backgroundImage != null && !file_backgroundImage.equals("")
+                && !file_backgroundImage.getOriginalFilename().equals(userInfo.getBackgroundImage())){
+
+//            HashMap<String, String> datas = s3Service.upload(userInfo.getBackgroundImage(), file_backgroundImage);
+//            userInfo.setBackgroundImage(datas.get("fileName"));
+//            backgroundImgUrl = datas.get("imgUrl");
+
+            String backgroundImg = s3Service.upload(userInfo.getBackgroundImage(), file_backgroundImage);
+            userInfo.setBackgroundImage(backgroundImg);
+        }
+
+        //db에 path 저장 (patch)
+        accountService.updateUserInfo(userInfo);
+
+        //응답은 url 형태로
+        userInfo.setProfileImage(awsCloudProperties.getUrl() + userInfo.getProfileImage());
+        userInfo.setBackgroundImage(awsCloudProperties.getUrl() + userInfo.getBackgroundImage());
+
+        AccountDto modifiedUserInfo = this.modelMapper.map(userInfo, AccountDto.class);
+
+        return ResponseEntity.ok(modifiedUserInfo);
     }
 
 }

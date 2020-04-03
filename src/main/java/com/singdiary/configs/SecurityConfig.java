@@ -1,5 +1,6 @@
 package com.singdiary.configs;
 
+import com.singdiary.common.Description;
 import com.singdiary.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -19,6 +20,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsUtils;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -70,22 +79,52 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher());
     }
 
+    /*@Bean
+    CorsFilter corsFilter() {
+        CorsFilter filter = new CorsFilter();
+        return filter;
+    }*/
+
     //http가 적용된다는 말은, 일단 spring security 안으로 들어왔다는 말
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        // session으로 중복 로그인 방지
-        http.sessionManagement()
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(true)
-//                .expiredUrl("웹 애플리케이션 로그인 페이지")
-                .sessionRegistry(sessionRegistry());
+        http
+            // session으로 중복 로그인 방지
+            .sessionManagement()
+            .maximumSessions(1)
+            .maxSessionsPreventsLogin(true)
+            .sessionRegistry(sessionRegistry())
+//            .cors().and()
+        ;
 
-        /*http.anonymous()
-                .and()
-            .formLogin()
-                .and()
-            .authorizeRequests()
-                .anyRequest().authenticated()
-        ;*/
+//        http
+//            // session으로 중복 로그인 방지
+//            .sessionManagement()
+//            .maximumSessions(1)
+//            .maxSessionsPreventsLogin(true)
+//            .sessionRegistry(sessionRegistry())
+//
+//            //.expiredUrl("웹 애플리케이션 로그인 페이지")
+//            /*http.anonymous()
+//                    .and()
+//                .formLogin()
+//                    .and()
+//                .authorizeRequests()
+//                    .anyRequest().authenticated();
+//            */
+//        ;
     }
+
+    /*@Bean
+    CorsConfigurationSource corsConfigurationSource()
+    {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        //or any domain that you want to restrict to
+        configuration.setAllowedMethods(Arrays.asList("GET","POST"));
+        //Add the method support as you like
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }*/
 }

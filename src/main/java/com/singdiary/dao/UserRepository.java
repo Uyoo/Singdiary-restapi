@@ -15,11 +15,13 @@ public interface UserRepository {
 
 
     /*====== users/duplicate/{username} ======*/
-    @Description("user 테이블에서 중복되는 닉네임의 정보 조회")
+    @Description("account 테이블에서 중복되는 닉네임의 정보 조회")
     List<Account> findDuplicateName(String username) throws Exception;
 
     /*====== users/ ======*/
     @Description("account 테이블에 사용자 정보 삽입")
     void insertUser(Account account) throws Exception;
 
+    @Description("account 테이블에 사용자 정보 수정 - 프로필, 배경 이미지")
+    void updateUserInfo(Account account) throws Exception;
 }

@@ -20,6 +20,9 @@ target/
 *.ipr
 /src/test/**
 
+/src/main/resources/application.properties
+*.properties
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

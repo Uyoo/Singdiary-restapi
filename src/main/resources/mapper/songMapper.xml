@@ -13,12 +13,12 @@
     </update>-->
 
     <update id="updateSong" parameterType="Song">
-        update song set songTitle=#{songTitle}, genre=#{genre}, song.open=#{open}, publicCnt = #{publicCnt}
+        update song set songTitle=#{songTitle}, genre=#{genre}, song.open=#{open}, song.publicDate=#{publicDate}, publicCnt = #{publicCnt}
         where id = #{id} and userId = #{userId}
     </update>
 
     <select id="queryUserSong" parameterType="Song" resultType="Song">
-        SELECT song.id, account.name as "userName", song.userId, song.songTitle, song.playResource, song.genre, song.clickedNum, song.open, song.uploadDate, song.uploadTime, song.publicCnt
+        SELECT song.id, account.name as "userName", song.userId, song.songTitle, song.playResource, song.genre, song.clickedNum, song.open, song.uploadDate, song.uploadTime, song.publicDate, song.publicCnt
         FROM account, song
         where song.userId = account.id and userId = #{userId} and playResource = #{playResource} and genre = #{genre} and uploadDate = #{uploadDate} and uploadTime = #{uploadTime}
     </select>
@@ -26,5 +26,18 @@
     <delete id="deleteUserSong">
         DELETE from song where song.Id = #{id} and song.userId = #{userId};
     </delete>
+
+    <!-- 최신곡, 차트 -->
+    <select id="queryRecentSongListAllGenre" resultType="Song">
+        SELECT song.id, account.name as "userName", song.userId, account.profileImage, song.songTitle, song.playResource, song.genre, song.clickedNum, song.open, song.uploadDate, song.uploadTime, song.publicDate, song.publicCnt
+        from song, account
+        where song.userId = account.id and song.open=true and song.publicCnt = 1 and song.publicDate = curdate()
+    </select>
+
+    <select id="queryRecentSongList" resultType="Song">
+        SELECT song.id, account.name as "userName", song.userId, account.profileImage, song.songTitle, song.playResource, song.genre, song.clickedNum, song.open, song.uploadDate, song.uploadTime, song.publicDate, song.publicCnt
+        from song, account
+        where song.userId = account.id and song.open=true and song.publicCnt = 1 and song.genre = #{genre} and song.publicDate = curdate()
+    </select>
 
 </mapper>

@@ -39,8 +39,8 @@ class MydiaryControllerTest extends BaseControllerTest {
     @TestDescription("해당 사용자의 마이 다이어리에 곡 업로드 정상 처리")
     public void addUserMydiarySong() throws Exception{
         Mydiary mydiary = Mydiary.builder()
-                    .songTitle("song4")
-                    .genre("pop")
+                    .songTitle("song7")
+                    .genre("balad")
                     .playResource("../../")
                     .build();
 
@@ -185,22 +185,23 @@ class MydiaryControllerTest extends BaseControllerTest {
     @TestDescription("해당 사용자의 마이 다이어리 곡 하나 정보 수정 정상 처리")
     public void patchUserMydiarySong() throws Exception {
         Account user = this.accountService.findByUsername(appProperties.getUserUsername());
+
         Mydiary mydiary = Mydiary.builder()
-                .id(1)
+                .id(10)
                 .build();
 
         Mydiary userMydiarySong = this.mydiaryService.findUserMydiarySong(user.getId(), mydiary.getId());
         Mydiary_Update mydiaryUpdate = new Mydiary_Update();
 
         //곡 제목 수정, private 유지
-        mydiaryUpdate.setSongTitle("song1_update");
-        mydiaryUpdate.setGenre(userMydiarySong.getGenre());
-        mydiaryUpdate.setOpen(userMydiarySong.isOpen());
+//        mydiaryUpdate.setSongTitle("song4_update");
+//        mydiaryUpdate.setGenre(userMydiarySong.getGenre());
+//        mydiaryUpdate.setOpen(userMydiarySong.isOpen());
 
         //곡 제목 유지, public -> private 변경 or private -> public
-        /*mydiaryUpdate.setSongTitle(userMydiarySong.getSongTitle());
+        mydiaryUpdate.setSongTitle(userMydiarySong.getSongTitle());
         mydiaryUpdate.setGenre(userMydiarySong.getGenre());
-        mydiaryUpdate.setOpen(!userMydiarySong.isOpen());*/
+        mydiaryUpdate.setOpen(!userMydiarySong.isOpen());
 
         this.mockMvc.perform(patch("/users/{userId}/mydiary/{mydiaryId}", user.getId(), mydiary.getId())
                 .header(HttpHeaders.AUTHORIZATION, getBearerToken())

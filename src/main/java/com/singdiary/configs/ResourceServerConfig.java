@@ -23,14 +23,12 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http
-            .anonymous()
-                .and()
-            /*.requestMatchers().antMatchers("/")
-                .and()*/
             .authorizeRequests()
                 .mvcMatchers(HttpMethod.GET,"/users/**")
                     .permitAll()
                 .mvcMatchers(HttpMethod.POST, "/users/**")
+                    .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/public/**")
                     .permitAll()
                 .anyRequest()
                     .authenticated()

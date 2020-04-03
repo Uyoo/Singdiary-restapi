@@ -115,7 +115,7 @@ class UserControllerTest extends BaseControllerTest {
                 //basic auth라는 헤더를 만듦
                 .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
                 .param("username", appProperties.getUserUsername())
-                .param("password", appProperties.getUserPassword())
+                .param("password"   , appProperties.getUserPassword())
                 .param("grant_type", "password")
         );
 
